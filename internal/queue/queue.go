@@ -23,21 +23,25 @@ type RunningJob struct {
 	Process *exec.Cmd
 }
 
+// AutoSummaryCallback is called after a job completes successfully
+type AutoSummaryCallback func(ctx context.Context, jobID string)
+
 // TaskQueue manages transcription job processing
 type TaskQueue struct {
-	minWorkers     int
-	maxWorkers     int
-	currentWorkers int64 // Use atomic for thread-safe access
-	jobChannel     chan string
-	ctx            context.Context
-	cancel         context.CancelFunc
-	wg             sync.WaitGroup
-	processor      JobProcessor
-	runningJobs    map[string]*RunningJob
-	jobsMutex      sync.RWMutex
-	autoScale      bool
-	lastScaleTime  time.Time
-	jobRepo        repository.JobRepository
+	minWorkers        int
+	maxWorkers        int
+	currentWorkers    int64 // Use atomic for thread-safe access
+	jobChannel        chan string
+	ctx               context.Context
+	cancel            context.CancelFunc
+	wg                sync.WaitGroup
+	processor         JobProcessor
+	runningJobs       map[string]*RunningJob
+	jobsMutex         sync.RWMutex
+	autoScale         bool
+	lastScaleTime     time.Time
+	jobRepo           repository.JobRepository
+	autoSummaryCallback AutoSummaryCallback
 }
 
 // JobProcessor defines the interface for processing jobs
@@ -150,6 +154,11 @@ func (tq *TaskQueue) Stop() {
 	logger.Debug("Task queue stopped")
 }
 
+// SetAutoSummaryCallback sets the callback function to be called after successful job completion
+func (tq *TaskQueue) SetAutoSummaryCallback(callback AutoSummaryCallback) {
+	tq.autoSummaryCallback = callback
+}
+
 // EnqueueJob adds a job to the queue
 func (tq *TaskQueue) EnqueueJob(jobID string) error {
 	// Check if queue is already shut down
@@ -242,6 +251,10 @@ func (tq *TaskQueue) worker(id int) {
 				logger.Debug("Job processed successfully", "worker_id", id, "job_id", jobID)
 				if err := tq.updateJobStatus(jobID, models.StatusCompleted); err != nil {
 					logger.Error("Failed to update job status", "job_id", jobID, "error", err)
+				}
+				// Trigger auto-summary generation if callback is set
+				if tq.autoSummaryCallback != nil {
+					go tq.autoSummaryCallback(context.Background(), jobID)
 				}
 			}
 

@@ -1,18 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Upload, Mic, Settings, LogOut, Home, Plus, Grip, Zap, Youtube, Video, Users, MonitorSpeaker } from "lucide-react";
-import { ScriberrLogo } from "./ScriberrLogo";
+import { LogOut } from "lucide-react";
+import { AppLogo } from "@/components/AppLogo";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-import { AudioRecorder } from "./AudioRecorder";
-import { SystemAudioRecorder } from "./SystemAudioRecorder";
-import { QuickTranscriptionDialog } from "@/features/transcription/components/QuickTranscriptionDialog";
-import { YouTubeDownloadDialog } from "@/features/transcription/components/YouTubeDownloadDialog";
+// import { AudioRecorder } from "./audio/AudioRecorder";
+// import { SystemAudioRecorder } from "./SystemAudioRecorder";
+// import { QuickTranscriptionDialog } from "@/features/transcription/components/QuickTranscriptionDialog";
+// import { YouTubeDownloadDialog } from "@/features/transcription/components/YouTubeDownloadDialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { isVideoFile, isAudioFile } from "../utils/fileProcessor";
@@ -23,30 +17,31 @@ interface FileWithType {
 	isVideo: boolean;
 }
 
-interface HeaderProps {
-	onFileSelect?: (files: File | File[] | FileWithType | FileWithType[]) => void;
-	onMultiTrackClick?: () => void;
-	onDownloadComplete?: () => void;
-}
+// interface HeaderProps {
+// 	onFileSelect?: (files: File | File[] | FileWithType | FileWithType[]) => void;
+// 	onMultiTrackClick?: () => void;
+// 	onDownloadComplete?: () => void;
+// }
 
-export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: HeaderProps) {
+export function Header() {
 	const navigate = useNavigate();
 	const { logout } = useAuth();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const videoFileInputRef = useRef<HTMLInputElement>(null);
-	const [isRecorderOpen, setIsRecorderOpen] = useState(false);
-	const [isSystemRecorderOpen, setIsSystemRecorderOpen] = useState(false);
-	const [isQuickTranscriptionOpen, setIsQuickTranscriptionOpen] = useState(false);
-	const [isYouTubeDialogOpen, setIsYouTubeDialogOpen] = useState(false);
+	// const [isRecorderOpen, setIsRecorderOpen] = useState(false);
+	// const [isSystemRecorderOpen, setIsSystemRecorderOpen] = useState(false);
+	// const [isQuickTranscriptionOpen, setIsQuickTranscriptionOpen] = useState(false);
+	// const [isYouTubeDialogOpen, setIsYouTubeDialogOpen] = useState(false);
 
 	// Use global upload context as fallback when props are not provided
 	const globalUpload = useGlobalUpload();
 
 	// Determine which handlers to use (prop or global context)
-	const effectiveFileSelect = onFileSelect ?? globalUpload.handleFileSelect;
-	const effectiveMultiTrackClick = onMultiTrackClick ?? globalUpload.openMultiTrackDialog;
-	const effectiveRecordingComplete = globalUpload.handleRecordingComplete;
+	// const effectiveFileSelect = onFileSelect ?? globalUpload.handleFileSelect;
+	// const effectiveMultiTrackClick = onMultiTrackClick ?? globalUpload.openMultiTrackDialog;
+	// const effectiveRecordingComplete = globalUpload.handleRecordingComplete;
 
+	/*
 	const handleUploadClick = () => {
 		fileInputRef.current?.click();
 	};
@@ -54,7 +49,9 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 	const handleVideoUploadClick = () => {
 		videoFileInputRef.current?.click();
 	};
+	*/
 
+	/*
 	const handleRecordClick = () => {
 		setIsRecorderOpen(true);
 	};
@@ -74,10 +71,12 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 	const handleMultiTrackClick = () => {
 		effectiveMultiTrackClick();
 	};
+	*/
 
-	const handleSettingsClick = () => {
-		navigate("/settings");
-	};
+	// Settings hidden - configuration is done via code/environment variables
+	// const handleSettingsClick = () => {
+	// 	navigate("/settings");
+	// };
 
 	const handleLogout = () => {
 		logout();
@@ -88,6 +87,7 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 	};
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		// ... existing logic ...
 		const files = event.target.files;
 		if (files && files.length > 0) {
 			const fileArray = Array.from(files);
@@ -103,7 +103,8 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 			// Filter to only audio files
 			const audioFiles = fileArray.filter(file => isAudioFile(file));
 			if (audioFiles.length > 0) {
-				effectiveFileSelect(audioFiles.length === 1 ? audioFiles[0] : audioFiles);
+				// effectiveFileSelect(audioFiles.length === 1 ? audioFiles[0] : audioFiles);
+				globalUpload.handleFileSelect(audioFiles.length === 1 ? audioFiles[0] : audioFiles);
 				// Reset the input so the same files can be selected again
 				event.target.value = "";
 			} else {
@@ -122,29 +123,32 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 			if (videoFiles.length > 0) {
 				// Pass video files with type marker
 				const filesWithType: FileWithType[] = videoFiles.map(file => ({ file, isVideo: true }));
-				effectiveFileSelect(filesWithType.length === 1 ? filesWithType[0] : filesWithType);
+				// effectiveFileSelect(filesWithType.length === 1 ? filesWithType[0] : filesWithType);
+				globalUpload.handleFileSelect(filesWithType.length === 1 ? filesWithType[0] : filesWithType);
 				// Reset the input so the same files can be selected again
 				event.target.value = "";
 			}
 		}
 	};
 
+	/*
 	const handleRecordingComplete = async (blob: Blob, title: string) => {
 		// Use global recording complete handler
 		await effectiveRecordingComplete(blob, title);
 	};
+	*/
 
 
 	return (
 		<header className="sticky top-4 sm:top-6 z-50 glass rounded-[var(--radius-card)] px-4 py-3 sm:px-6 sm:py-4 transition-all duration-500 shadow-[var(--shadow-float)] border border-[var(--border-subtle)]">
 			<div className="flex items-center justify-between">
 				{/* Left side - Logo navigates home */}
-				<ScriberrLogo onClick={handleHomeClick} />
+				<AppLogo onClick={handleHomeClick} />
 
 				{/* Right side - Plus (Add Audio), Grip Menu, Theme Switcher */}
 				<div className="flex items-center gap-2 sm:gap-3">
 					{/* Add Audio (icon-only) */}
-					<DropdownMenu>
+					{/* <DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button
 								variant="default"
@@ -258,38 +262,21 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 								</div>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
-					</DropdownMenu>
-
-					{/* Main Menu (Grip) */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8 sm:h-10 sm:w-10 hover:bg-[var(--secondary)] rounded-[var(--radius-btn)] cursor-pointer text-[var(--text-secondary)]"
-							>
-								<Grip className="h-4 w-4 sm:h-5 sm:w-5" />
-								<span className="sr-only">Open menu</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-48 glass-card border-[var(--border-subtle)] p-2 rounded-[var(--radius-card)] shadow-[var(--shadow-float)]">
-							<DropdownMenuItem onClick={handleHomeClick} className="cursor-pointer rounded-[var(--radius-btn)] focus:bg-[var(--secondary)] py-2.5">
-								<Home className="h-4 w-4 mr-2" />
-								Home
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer rounded-[var(--radius-btn)] focus:bg-[var(--secondary)] py-2.5">
-								<Settings className="h-4 w-4 mr-2" />
-								Settings
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={handleLogout} className="cursor-pointer rounded-[var(--radius-btn)] focus:bg-[var(--error)]/10 text-[var(--error)] py-2.5">
-								<LogOut className="h-4 w-4 mr-2" />
-								Logout
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					</DropdownMenu> */}
 
 					{/* Theme Switcher (icon-only) */}
 					<ThemeSwitcher />
+
+          {/* Logout Button */}
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={handleLogout}
+						className="h-8 w-8 sm:h-10 sm:w-10 hover:bg-[var(--error)]/10 rounded-[var(--radius-btn)] cursor-pointer text-[var(--text-secondary)] hover:text-[var(--error)]"
+					>
+						<LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+						<span className="sr-only">Logout</span>
+					</Button>
 
 					{/* Hidden file input */}
 					<input
@@ -314,31 +301,31 @@ export function Header({ onFileSelect, onMultiTrackClick, onDownloadComplete }: 
 			</div>
 
 			{/* Audio Recorder Dialog */}
-			<AudioRecorder
+			{/* <AudioRecorder
 				isOpen={isRecorderOpen}
 				onClose={() => setIsRecorderOpen(false)}
 				onRecordingComplete={handleRecordingComplete}
-			/>
+			/> */}
 
 			{/* System Audio Recorder Dialog */}
-			<SystemAudioRecorder
+			{/* <SystemAudioRecorder
 				isOpen={isSystemRecorderOpen}
 				onClose={() => setIsSystemRecorderOpen(false)}
 				onRecordingComplete={effectiveRecordingComplete}
-			/>
+			/> */}
 
 			{/* Quick Transcription Dialog */}
-			<QuickTranscriptionDialog
+			{/* <QuickTranscriptionDialog
 				isOpen={isQuickTranscriptionOpen}
 				onClose={() => setIsQuickTranscriptionOpen(false)}
-			/>
+			/> */}
 
 			{/* YouTube Download Dialog */}
-			<YouTubeDownloadDialog
+			{/* <YouTubeDownloadDialog
 				isOpen={isYouTubeDialogOpen}
 				onClose={() => setIsYouTubeDialogOpen(false)}
 				onDownloadComplete={onDownloadComplete}
-			/>
+			/> */}
 
 		</header>
 	);

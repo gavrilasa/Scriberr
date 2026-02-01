@@ -19,6 +19,7 @@ import (
 	"scriberr/internal/queue"
 	"scriberr/internal/repository"
 	"scriberr/internal/service"
+	"scriberr/internal/settings"
 	"scriberr/internal/sse"
 	"scriberr/internal/transcription"
 	"scriberr/internal/transcription/adapters"
@@ -88,6 +89,13 @@ func main() {
 	}
 	defer database.Close()
 
+	// Seed default configuration (profiles, LLM config, summary templates)
+	logger.Startup("settings", "Seeding default configuration")
+	if err := settings.SeedDefaults(database.DB); err != nil {
+		logger.Error("Failed to seed default configuration", "error", err)
+		os.Exit(1)
+	}
+
 	// Initialize authentication service
 	logger.Startup("auth", "Setting up authentication")
 	authService := auth.NewAuthService(cfg.JWTSecret)
@@ -137,6 +145,15 @@ func main() {
 	// Initialize task queue
 	logger.Startup("queue", "Starting background processing")
 	taskQueue := queue.NewTaskQueue(2, unifiedProcessor, jobRepo) // 2 workers
+
+	// Initialize auto-summary service and set callback for post-transcription summary
+	autoSummaryService := service.NewAutoSummaryService(jobRepo, summaryRepo, llmConfigRepo)
+	taskQueue.SetAutoSummaryCallback(func(ctx context.Context, jobID string) {
+		if err := autoSummaryService.GenerateSummaryForJob(ctx, jobID); err != nil {
+			logger.Error("Auto-summary generation failed", "job_id", jobID, "error", err)
+		}
+	})
+
 	taskQueue.Start()
 	defer taskQueue.Stop()
 

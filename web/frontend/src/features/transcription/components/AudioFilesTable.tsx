@@ -737,7 +737,7 @@ export const AudioFilesTable = memo(function AudioFilesTable({
 					placeholder="Search recordings..."
 					value={globalFilter ?? ""}
 					onChange={(value) => setGlobalFilter(String(value))}
-					className="w-full sm:w-80 shadow-sm border-transparent focus:border-[var(--brand-solid)] bg-white dark:bg-zinc-900"
+					className="w-full shadow-sm border-transparent focus:border-[var(--brand-solid)] bg-white dark:bg-zinc-900"
 				/>
 			</div>
 

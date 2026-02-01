@@ -4,8 +4,9 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 // Lazy load route components for better performance
 const Dashboard = lazy(() => import("@/features/transcription/components/Dashboard").then(module => ({ default: module.Dashboard })));
 const AudioDetailView = lazy(() => import("@/features/transcription/components/AudioDetailView").then(module => ({ default: module.AudioDetailView })));
-const Settings = lazy(() => import('@/features/settings/pages/SettingsPage').then(module => ({ default: module.Settings })))
-const CLISettings = lazy(() => import('@/features/settings/pages/CLISettingsPage').then(module => ({ default: module.CLISettings })))
+// Settings pages hidden - configuration is done via code/environment variables
+// const Settings = lazy(() => import('@/features/settings/pages/SettingsPage').then(module => ({ default: module.Settings })))
+// const CLISettings = lazy(() => import('@/features/settings/pages/CLISettingsPage').then(module => ({ default: module.CLISettings })))
 const CLIAuthConfirmation = lazy(() => import('./features/auth/components/CLIAuthConfirmation').then(module => ({ default: module.CLIAuthConfirmation })))
 
 
@@ -23,8 +24,9 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/audio/:audioId" element={<AudioDetailView />} />
 
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/settings/cli" element={<CLISettings />} />
+        {/* Settings routes hidden - configuration is done via code/environment variables */}
+        {/* <Route path="/settings" element={<Settings />} /> */}
+        {/* <Route path="/settings/cli" element={<CLISettings />} /> */}
         <Route path="/auth/cli/authorize" element={<CLIAuthConfirmation />} />
 
         {/* Fallback */}

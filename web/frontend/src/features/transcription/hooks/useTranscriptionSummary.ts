@@ -24,7 +24,7 @@ export function useSummaryTemplates() {
     });
 }
 
-export function useExistingSummary(audioId: string) {
+export function useExistingSummary(audioId: string, options?: { refetchInterval?: number | false | ((data: any) => number | false), enabled?: boolean }) {
     const { getAuthHeaders } = useAuth();
     return useQuery({
         queryKey: ["summary", audioId],
@@ -36,6 +36,7 @@ export function useExistingSummary(audioId: string) {
             return response.json() as Promise<{ content: string }>;
         },
         retry: false,
+        ...options,
     });
 }
 

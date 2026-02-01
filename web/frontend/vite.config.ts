@@ -12,28 +12,28 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'icon-dark.svg', 'icon-light.svg'],
       manifest: {
-        name: 'Scriberr',
-        short_name: 'Scriberr',
-        description: 'Offline Audio Transcription',
+        name: process.env.VITE_APP_NAME || 'Fona',
+        short_name: process.env.VITE_APP_NAME || 'Fona',
+        description: 'AI-Powered Transcription',
         theme_color: '#8936FF',
         background_color: '#2EC6FE',
         display: 'standalone',
         orientation: 'any',
         start_url: '/',
-        id: 'scriberr-transcription',
+        id: 'fona-transcription',
         icons: [
           {
-            src: 'icon512_maskable.png',
+            src: 'icon-dark.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'maskable'
           },
           {
-            src: 'icon512_rounded.png',
+            src: 'icon-light.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any'
           }
         ]

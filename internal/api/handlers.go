@@ -325,46 +325,34 @@ func (h *Handler) UploadAudio(c *gin.Context) {
 		return
 	}
 
-	// Check for auto-transcription if user is authenticated via JWT
-	if userID, exists := c.Get("user_id"); exists {
-		// Use UserService to get user
-		user, err := h.userService.GetUser(c.Request.Context(), userID.(uint))
-		if err == nil && user.AutoTranscriptionEnabled {
-			// Get user's default profile or use system default
-			var profile *models.TranscriptionProfile
+	// Auto-transcription: Always start transcription using default profile
+	// Get the system default profile (or first available)
+	var profile *models.TranscriptionProfile
 
-			if user.DefaultProfileID != nil {
-				profile, _ = h.profileRepo.FindByID(c.Request.Context(), *user.DefaultProfileID)
-			}
+	// First try to find the system default profile
+	profile, _ = h.profileRepo.FindDefault(c.Request.Context())
 
-			// If no user default or user default not found, try to find a system default
-			if profile == nil {
-				profile, _ = h.profileRepo.FindDefault(c.Request.Context())
-			}
+	// If no default found, use the first available profile
+	if profile == nil {
+		profiles, _, _ := h.profileRepo.List(c.Request.Context(), 0, 1)
+		if len(profiles) > 0 {
+			profile = &profiles[0]
+		}
+	}
 
-			// If still no profile found, use the first available profile
-			if profile == nil {
-				profiles, _, _ := h.profileRepo.List(c.Request.Context(), 0, 1)
-				if len(profiles) > 0 {
-					profile = &profiles[0]
-				}
-			}
+	// If we found a profile, update the job and queue it for transcription
+	if profile != nil {
+		job.Parameters = profile.Parameters
+		job.Diarization = profile.Parameters.Diarize
+		job.Status = models.StatusPending
 
-			// If we found a profile, update the job and queue it
-			if profile != nil {
-				job.Parameters = profile.Parameters
-				job.Diarization = profile.Parameters.Diarize
-				job.Status = models.StatusPending
-
-				// Update the job in database
-				if err := h.jobRepo.Update(c.Request.Context(), &job); err == nil {
-					// Enqueue the job for transcription
-					if err := h.taskQueue.EnqueueJob(jobID); err != nil {
-						// If enqueueing fails, revert status but don't fail the upload
-						job.Status = models.StatusUploaded
-						_ = h.jobRepo.Update(c.Request.Context(), &job)
-					}
-				}
+		// Update the job in database
+		if err := h.jobRepo.Update(c.Request.Context(), &job); err == nil {
+			// Enqueue the job for transcription
+			if err := h.taskQueue.EnqueueJob(jobID); err != nil {
+				// If enqueueing fails, revert status but don't fail the upload
+				job.Status = models.StatusUploaded
+				_ = h.jobRepo.Update(c.Request.Context(), &job)
 			}
 		}
 	}
@@ -437,34 +425,24 @@ func (h *Handler) UploadVideo(c *gin.Context) {
 	// TODO: Make this configurable? Some users might want to keep the video.
 	_ = h.fileService.RemoveFile(videoPath)
 
-	// Check for auto-transcription (same logic as UploadAudio)
-	if userID, exists := c.Get("user_id"); exists {
-		user, err := h.userService.GetUser(c.Request.Context(), userID.(uint))
-		if err == nil && user.AutoTranscriptionEnabled {
-			var profile *models.TranscriptionProfile
-			if user.DefaultProfileID != nil {
-				profile, _ = h.profileRepo.FindByID(c.Request.Context(), *user.DefaultProfileID)
-			}
-			if profile == nil {
-				profile, _ = h.profileRepo.FindDefault(c.Request.Context())
-			}
-			if profile == nil {
-				profiles, _, _ := h.profileRepo.List(c.Request.Context(), 0, 1)
-				if len(profiles) > 0 {
-					profile = &profiles[0]
-				}
-			}
+	// Auto-transcription: Always start transcription using default profile
+	var profile *models.TranscriptionProfile
+	profile, _ = h.profileRepo.FindDefault(c.Request.Context())
+	if profile == nil {
+		profiles, _, _ := h.profileRepo.List(c.Request.Context(), 0, 1)
+		if len(profiles) > 0 {
+			profile = &profiles[0]
+		}
+	}
 
-			if profile != nil {
-				job.Parameters = profile.Parameters
-				job.Diarization = profile.Parameters.Diarize
-				job.Status = models.StatusPending
-				if err := h.jobRepo.Update(c.Request.Context(), &job); err == nil {
-					if err := h.taskQueue.EnqueueJob(jobID); err != nil {
-						job.Status = models.StatusUploaded
-						_ = h.jobRepo.Update(c.Request.Context(), &job)
-					}
-				}
+	if profile != nil {
+		job.Parameters = profile.Parameters
+		job.Diarization = profile.Parameters.Diarize
+		job.Status = models.StatusPending
+		if err := h.jobRepo.Update(c.Request.Context(), &job); err == nil {
+			if err := h.taskQueue.EnqueueJob(jobID); err != nil {
+				job.Status = models.StatusUploaded
+				_ = h.jobRepo.Update(c.Request.Context(), &job)
 			}
 		}
 	}

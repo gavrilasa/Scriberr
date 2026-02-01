@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
+// import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
-import { MoreVertical, Edit2, Activity, FileText, Bot, Check, Loader2, List, AlignLeft, ArrowDownCircle, StickyNote, MessageCircle, FileImage, FileJson, Clock, AlertCircle, Users } from "lucide-react";
+import { MoreVertical, Edit2, Activity, FileText, Bot, Check, Loader2, List, AlignLeft, ArrowDownCircle, /* StickyNote, MessageCircle, FileImage */ FileJson, Clock, AlertCircle, Users, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import { Header } from "@/components/Header";
+import ReactMarkdown from 'react-markdown';
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,15 +15,16 @@ import { cn } from "@/lib/utils";
 // Custom Hooks
 import { useAudioDetail, useUpdateTitle, useTranscript, type TranscriptSegment } from "@/features/transcription/hooks/useAudioDetail";
 import { useSpeakerMappings } from "@/features/transcription/hooks/useTranscriptionSpeakers";
-import { useTranscriptDownload } from "@/features/transcription/hooks/useTranscriptDownload";
+// import { useTranscriptDownload } from "@/features/transcription/hooks/useTranscriptDownload";
 
 // Sub-components
 import { TranscriptSection } from "./audio-detail/TranscriptSection";
 import { ExecutionInfoDialog } from "./audio-detail/ExecutionInfoDialog";
 import { LogsDialog } from "./audio-detail/LogsDialog";
 import { SummaryDialog } from "./audio-detail/SummaryDialog";
-import { ChatSidePanel } from "./ChatSidePanel";
-import { useIsMobile } from "@/hooks/use-mobile";
+// import { ChatSidePanel } from "./ChatSidePanel";
+// import { useIsMobile } from "@/hooks/use-mobile";
+import { useExistingSummary } from "@/features/transcription/hooks/useTranscriptionSummary";
 
 // Types
 interface AudioDetailViewProps {
@@ -46,7 +48,7 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
     // Lifted Transcript State
     const [transcriptMode, setTranscriptMode] = useState<"compact" | "expanded">("compact");
     const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
-    const [notesOpen, setNotesOpen] = useState(false);
+    // const [notesOpen, setNotesOpen] = useState(false);
     const [speakerRenameOpen, setSpeakerRenameOpen] = useState(false);
     const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
     const [downloadFormat, setDownloadFormat] = useState<'txt' | 'json'>('txt');
@@ -55,6 +57,7 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
     const [executionDialogOpen, setExecutionDialogOpen] = useState(false);
     const [logsDialogOpen, setLogsDialogOpen] = useState(false);
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [transcriptExpanded, setTranscriptExpanded] = useState(false); // Collapsed by default
 
     // Data Fetching
     const { data: audioFile, isLoading, error } = useAudioDetail(audioId || "");
@@ -62,18 +65,29 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
     // Fetch transcript & speakers here to support menu actions
     const { data: transcript } = useTranscript(audioId || "", true);
     const { data: speakerMappings = {} } = useSpeakerMappings(audioId || "", true);
+    // Fetch existing summary with refetch capability
+    // Poll every 2s if transcription is done but no summary yet
+    const { data: existingSummary, isLoading: summaryLoading } = useExistingSummary(audioId || "", {
+        refetchInterval: (data) => {
+            if (audioFile?.status === 'completed' && !data?.content) {
+                return 2000;
+            }
+            return false;
+        }
+    });
 
-    // Download Logic
-    const { downloadSRT } = useTranscriptDownload();
+    // // Download Logic
+    // const { downloadSRT } = useTranscriptDownload();
 
     // State for Split View
-    const [chatOpen, setChatOpen] = useState(false);
-    const [sidebarWidth, setSidebarWidth] = useState(400);
-    const [isResizing, setIsResizing] = useState(false);
+    // const [chatOpen, setChatOpen] = useState(false);
+    // const [sidebarWidth, setSidebarWidth] = useState(400);
+    // const [isResizing, setIsResizing] = useState(false);
     const splitContainerRef = useRef<HTMLDivElement>(null);
-    const isMobile = useIsMobile();
+    // const isMobile = useIsMobile();
 
     // Resizing Logic
+    /*
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
             if (!isResizing) return;
@@ -101,6 +115,7 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
             window.removeEventListener('mouseup', handleMouseUp);
         };
     }, [isResizing]);
+    */
 
     // Helpers
 
@@ -136,15 +151,15 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
     if (!audioId) return <div>Invalid Audio ID</div>;
 
     // Handler for notes/chat exclusivity
-    const handleSetNotesOpen = (open: boolean) => {
-        if (open) setChatOpen(false);
-        setNotesOpen(open);
-    };
+    // const handleSetNotesOpen = (open: boolean) => {
+    //     if (open) setChatOpen(false);
+    //     setNotesOpen(open);
+    // };
 
-    const handleSetChatOpen = (open: boolean) => {
-        if (open) setNotesOpen(false);
-        setChatOpen(open);
-    };
+    // const handleSetChatOpen = (open: boolean) => {
+    //     if (open) setNotesOpen(false);
+    //     setChatOpen(open);
+    // };
 
 
     if (!audioId) return <div>Invalid Audio ID</div>;
@@ -190,7 +205,7 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                             </div>
                             <div className="space-y-6 sm:space-y-8">
                                 {/* Sticky header: Title + Audio Player */}
-                                <div className="sticky top-0 z-10">
+                                <div className="top-0 z-10">
                                     {/* Title & Metadata */}
                                     <div className="space-y-4 glass-card rounded-[var(--radius-card)] border-[var(--border-subtle)] shadow-[var(--shadow-card)] p-4 md:p-6 mb-4">
                                     <div className="flex items-start justify-between gap-4">
@@ -272,6 +287,8 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                                         {/* ... keeping existing Logic but updating Chat action ... */}
                                         <div className="flex items-center gap-2">
                                             {/* Quick Chat Button */}
+                                            {/* Quick Chat Button - Hidden */}
+                                            {/* 
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -283,7 +300,8 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                                             >
                                                 <MessageCircle className="h-4 w-4" />
                                                 <span className="hidden sm:inline">Chat</span>
-                                            </Button>
+                                            </Button> 
+                                            */}
 
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -313,6 +331,7 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                                                         <ArrowDownCircle className={cn("mr-2 h-4 w-4 opacity-70", autoScrollEnabled && "text-[var(--brand-solid)]")} />
                                                         Auto Scroll {autoScrollEnabled ? 'On' : 'Off'}
                                                     </DropdownMenuItem>
+                                                    {/* 
                                                     <DropdownMenuItem onClick={() => handleSetNotesOpen(!notesOpen)} className="rounded-[8px] cursor-pointer">
                                                         <StickyNote className={cn("mr-2 h-4 w-4 opacity-70", notesOpen && "text-[var(--brand-solid)]")} />
                                                         Notes
@@ -321,7 +340,8 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                                                     <DropdownMenuItem onClick={() => handleSetChatOpen(!chatOpen)} className="rounded-[8px] cursor-pointer">
                                                         <MessageCircle className={cn("mr-2 h-4 w-4 opacity-70", chatOpen && "text-[var(--brand-solid)]")} />
                                                         Chat with Audio
-                                                    </DropdownMenuItem>
+                                                    </DropdownMenuItem> 
+                                                    */}
                                                     {transcript?.segments?.some((s: TranscriptSegment) => s.speaker) && (
                                                         <DropdownMenuItem onClick={() => setSpeakerRenameOpen(true)} className="rounded-[8px] cursor-pointer">
                                                             <Users className="mr-2 h-4 w-4 opacity-70" />
@@ -332,9 +352,9 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                                                         <Bot className="mr-2 h-4 w-4" /> AI Summary
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="bg-[var(--border-subtle)] my-1" />
-                                                    <DropdownMenuItem onClick={() => transcript && downloadSRT(transcript, audioFile?.title || 'transcript', speakerMappings)} className="rounded-[8px] cursor-pointer">
+                                                    {/* <DropdownMenuItem onClick={() => transcript && downloadSRT(transcript, audioFile?.title || 'transcript', speakerMappings)} className="rounded-[8px] cursor-pointer">
                                                         <FileImage className="mr-2 h-4 w-4 opacity-70" /> Download SRT
-                                                    </DropdownMenuItem>
+                                                    </DropdownMenuItem> */}
                                                     <DropdownMenuItem onClick={() => { setDownloadFormat('txt'); setDownloadDialogOpen(true); }} className="rounded-[8px] cursor-pointer">
                                                         <AlignLeft className="mr-2 h-4 w-4 opacity-70" /> Download Text
                                                     </DropdownMenuItem>
@@ -365,43 +385,99 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                                     </div>
                                 </div>
 
-                                {/* Transcript */}
-                                <TranscriptSectionWrapper
-                                    audioId={audioId}
-                                    currentTime={currentTime}
-                                    onSeek={handleSeek}
-                                    transcript={transcript}
-                                    speakerMappings={speakerMappings}
-                                    transcriptMode={transcriptMode}
-                                    autoScrollEnabled={autoScrollEnabled}
-                                    notesOpen={notesOpen}
-                                    setNotesOpen={handleSetNotesOpen}
-                                    speakerRenameOpen={speakerRenameOpen}
-                                    setSpeakerRenameOpen={setSpeakerRenameOpen}
-                                    downloadDialogOpen={downloadDialogOpen}
-                                    setDownloadDialogOpen={setDownloadDialogOpen}
-                                    downloadFormat={downloadFormat}
-                                    isPlaying={isPlaying}
-                                />
+                                {/* Summary Section - Displayed at top */}
+                                <div className="glass-card rounded-[var(--radius-card)] border-[var(--border-subtle)] shadow-[var(--shadow-card)] p-4 md:p-6 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <Sparkles className="h-5 w-5 text-[var(--brand-solid)]" />
+                                        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Summary</h2>
+                                        {(audioFile.status === 'processing' || summaryLoading) && (
+                                            <Loader2 className="h-4 w-4 animate-spin text-[var(--text-tertiary)]" />
+                                        )}
+                                    </div>
+                                    {existingSummary?.content ? (
+                                        <div className="prose prose-stone dark:prose-invert max-w-none text-[#171717] dark:text-[#EDEDED] leading-relaxed">
+                                            <ReactMarkdown
+                                                components={{
+                                                    p: ({ ...props }) => <p className="text-[#525252] dark:text-[#A3A3A3] leading-7 mb-4" {...props} />,
+                                                    h1: ({ ...props }) => <h1 className="text-[#171717] dark:text-[#EDEDED] font-bold text-2xl mt-6 mb-4" {...props} />,
+                                                    h2: ({ ...props }) => <h2 className="text-[#171717] dark:text-[#EDEDED] font-bold text-xl mt-6 mb-3" {...props} />,
+                                                    h3: ({ ...props }) => <h3 className="text-[#171717] dark:text-[#EDEDED] font-bold text-lg mt-5 mb-2" {...props} />,
+                                                    li: ({ ...props }) => <li className="pl-1 text-[#525252] dark:text-[#A3A3A3] mb-1" {...props} />,
+                                                    strong: ({ ...props }) => <strong className="text-[#171717] dark:text-[#EDEDED] font-bold" {...props} />,
+                                                    ul: ({ ...props }) => <ul className="list-disc pl-5 mb-4" {...props} />,
+                                                    ol: ({ ...props }) => <ol className="list-decimal pl-5 mb-4" {...props} />,
+                                                }}
+                                            >
+                                                {existingSummary.content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    ) : audioFile.status === 'completed' && !summaryLoading ? (
+                                        <div className="flex items-center gap-3 py-4">
+                                            <Loader2 className="h-5 w-5 animate-spin text-[var(--brand-solid)]" />
+                                            <p className="text-sm text-[var(--text-tertiary)]">Generating summary... This may take a moment.</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-[var(--text-tertiary)] italic">Summary will appear here once transcription completes.</p>
+                                    )}
+                                </div>
+
+                                {/* Transcript Section - Collapsible */}
+                                <div className="glass-card rounded-[var(--radius-card)] border-[var(--border-subtle)] shadow-[var(--shadow-card)] overflow-hidden transition-all duration-300">
+                                    <button
+                                        onClick={() => setTranscriptExpanded(!transcriptExpanded)}
+                                        className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-[var(--bg-main)] transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="h-5 w-5 text-[var(--text-secondary)]" />
+                                            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Transcript</h2>
+                                            {audioFile.status === 'processing' && (
+                                                <Loader2 className="h-4 w-4 animate-spin text-[var(--text-tertiary)]" />
+                                            )}
+                                        </div>
+                                        {transcriptExpanded ? (
+                                            <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                                        ) : (
+                                            <ChevronRight className="h-5 w-5 text-[var(--text-tertiary)]" />
+                                        )}
+                                    </button>
+                                    {transcriptExpanded && (
+                                        <div className="px-4 md:px-6 pb-4 md:pb-6">
+                                            <TranscriptSectionWrapper
+                                                audioId={audioId}
+                                                currentTime={currentTime}
+                                                onSeek={handleSeek}
+                                                transcript={transcript}
+                                                speakerMappings={speakerMappings}
+                                                transcriptMode={transcriptMode}
+                                                autoScrollEnabled={autoScrollEnabled}
+                                                // notesOpen={notesOpen}
+                                                // setNotesOpen={handleSetNotesOpen}
+                                                speakerRenameOpen={speakerRenameOpen}
+                                                setSpeakerRenameOpen={setSpeakerRenameOpen}
+                                                downloadDialogOpen={downloadDialogOpen}
+                                                setDownloadDialogOpen={setDownloadDialogOpen}
+                                                downloadFormat={downloadFormat}
+                                                isPlaying={isPlaying}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </main>
 
                 {/* Handlers & Right Pane (Desktop Split) */}
+                {/* Handlers & Right Pane (Desktop Split) - Hidden */}
+                {/* 
                 {chatOpen && !isMobile && (
                     <>
-                        {/* Resizer Handle */}
                         <div
-                            // 1. Container: Wider hit area (w-3 = 12px) for easy grabbing, transparent bg
                             className="w-1 flex justify-center cursor-col-resize z-30 flex-shrink-0 group relative select-none"
                             onMouseDown={() => setIsResizing(true)}
                         >
-                            {/* 2. Visual Line: The actual thin line the user sees */}
                             <div className="w-[1px] h-full bg-[var(--border-subtle)] transition-colors group-hover:bg-[var(--brand-solid)] group-active:bg-[var(--brand-solid)]" />
                         </div>
-                        {/* Right Pane */}
-                        {/* Right Pane */}
                         <div style={{ width: sidebarWidth }} className="flex-shrink-0 h-full  bg-[var(--bg-card)] z-20">
                             <ChatSidePanel
                                 transcriptionId={audioId}
@@ -411,7 +487,8 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                             />
                         </div>
                     </>
-                )}
+                )} 
+                */}
             </div>
 
             {/* Mobile / Overlay Chat (If we want overlay behavior even on desktop, we can adjust logic) */}
@@ -442,6 +519,8 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
             />
 
             {/* Mobile / Overlay Chat */}
+            {/* Mobile / Overlay Chat - Hidden */}
+            {/* 
             {chatOpen && isMobile && createPortal(
                 <div className="fixed inset-0 z-[50] flex justify-end bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full h-full bg-[var(--bg-card)] shadow-2xl animate-in slide-in-from-right duration-300">
@@ -453,7 +532,8 @@ export const AudioDetailView = function AudioDetailView({ audioId: propAudioId }
                     </div>
                 </div>,
                 document.body
-            )}
+            )} 
+            */}
         </div>
     );
 };
