@@ -1,0 +1,29 @@
+services:
+  scriberr:
+    container_name: scriberr
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: scriberr:prod-local
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - APP_ENV=production
+      - TZ=${TZ:-UTC}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - scriberr_data:/app/data
+      - scriberr_env:/app/whisperx-env
+    # networks:
+    #   - npm_default # Uncomment and match your NPM network name if using Docker networks
+
+volumes:
+  scriberr_data:
+  scriberr_env:
+
+# networks:
+#   npm_default:
+#     external: true

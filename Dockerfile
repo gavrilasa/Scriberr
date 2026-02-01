@@ -10,7 +10,7 @@ WORKDIR /web
 # Install deps and build web/frontend
 COPY web/frontend/package*.json ./frontend/
 RUN cd frontend \
-  && npm ci
+  && npm install
 
 COPY web/frontend ./frontend
 RUN cd frontend \
