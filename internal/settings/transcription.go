@@ -63,6 +63,16 @@ func DefaultTranscriptionProfile() *models.TranscriptionProfile {
 			MaxSpeakers: nil,
 
 			// ═══════════════════════════════════════════════════════════════
+			// LANGUAGE SETTINGS
+			// ═══════════════════════════════════════════════════════════════
+
+			// Language: ISO code for language (nil = auto-detect)
+			// Examples: "en", "es", "fr", "de", "ja", "zh"
+			Language: ptrString("id"),
+
+			// Task: Transcription task
+			// Options: "transcribe", "translate" (translate to English)
+			Task: "transcribe",
 			// ═══════════════════════════════════════════════════════════════
 			// ALIGNMENT SETTINGS
 			// ═══════════════════════════════════════════════════════════════
