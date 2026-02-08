@@ -10,53 +10,53 @@ func DefaultSummaryTemplates() []*models.SummaryTemplate {
 		// PSYCHOLOGY SOAP NOTE TEMPLATE
 		// ═══════════════════════════════════════════════════════════════
 		{
-			Name:        "Psychology SOAP Note",
-			Description: ptrString("Generate a structured SOAP note from a psychology consultation transcript"),
+			Name:        "Catatan SOAP Psikologi",
+			Description: ptrString("Buat catatan SOAP terstruktur dari transkrip konsultasi psikologi"),
 			Model:       "gpt-4o-mini",
-			Prompt: `You are a clinical documentation assistant for psychology consultations. Analyze the following transcript and generate a structured SOAP note following medical documentation standards.
+			Prompt: `Anda adalah asisten dokumentasi klinis untuk konsultasi psikologi. Analisis transkrip berikut dan buat catatan SOAP terstruktur mengikuti standar dokumentasi medis.
 
-## SOAP FORMAT
+## FORMAT SOAP
 
-### S - Subjective
-Document the patient's self-reported information:
-- Chief complaint and presenting concerns
-- History of present illness (HPI)
-- Patient's description of symptoms, feelings, and experiences
-- Relevant psychosocial history mentioned
-- Patient's goals for therapy
+### S - Subjective (Subjektif)
+Dokumentasikan informasi yang dilaporkan sendiri oleh pasien:
+- Keluhan utama dan masalah yang muncul
+- Riwayat penyakit saat ini (HPI)
+- Deskripsi pasien tentang gejala, perasaan, dan pengalaman
+- Riwayat psikososial relevan yang disebutkan
+- Tujuan terapi pasien
 
-### O - Objective
-Document observable and measurable findings:
-- Mental status examination observations (appearance, behavior, affect, mood, speech, thought process)
-- Behavioral observations during session
-- Clinician's objective observations
-- Any assessment scores or test results mentioned
+### O - Objective (Objektif)
+Dokumentasikan temuan yang dapat diamati dan diukur:
+- Observasi pemeriksaan status mental (penampilan, perilaku, afek, suasana hati, bicara, proses berpikir)
+- Observasi perilaku selama sesi
+- Observasi objektif klinisi
+- Skor penilaian atau hasil tes yang disebutkan
 
-### A - Assessment
-Provide clinical interpretation:
-- Clinical impressions and diagnostic considerations
-- Progress toward treatment goals
-- Risk assessment (suicidal/homicidal ideation, self-harm)
-- Functional impairment level
-- Therapeutic alliance assessment
+### A - Assessment (Penilaian)
+Berikan interpretasi klinis:
+- Kesan klinis dan pertimbangan diagnostik
+- Kemajuan menuju tujuan pengobatan
+- Penilaian risiko (ide bunuh diri/pembunuhan, menyakiti diri sendiri)
+- Tingkat gangguan fungsional
+- Penilaian aliansi terapeutik
 
-### P - Plan
-Document the treatment plan:
-- Interventions used in this session
-- Homework or tasks assigned
-- Modifications to treatment plan
-- Referrals or consultations needed
-- Next appointment and session goals
-- Safety planning if applicable
+### P - Plan (Perencanaan)
+Dokumentasikan rencana perawatan:
+- Intervensi yang digunakan dalam sesi ini
+- Pekerjaan rumah atau tugas yang diberikan
+- Modifikasi rencana perawatan
+- Rujukan atau konsultasi yang dibutuhkan
+- Janji temu berikutnya dan tujuan sesi
+- Perencanaan keselamatan jika berlaku
 
 ---
 
-**Important Guidelines:**
-- Use professional clinical language
-- Be concise but thorough
-- Maintain patient confidentiality standards
-- Note any safety concerns prominently
-- Include direct quotes when clinically relevant (marked with quotation marks)
+**Panduan Penting:**
+- Gunakan bahasa klinis profesional (Bahasa Indonesia)
+- Ringkas namun menyeluruh
+- Pertahankan standar kerahasiaan pasien
+- Catat masalah keamanan secara mencolok
+- Sertakan kutipan langsung jika relevan secara klinis (ditandai dengan tanda kutip)
 
 TRANSCRIPT:
 {{transcript}}`,

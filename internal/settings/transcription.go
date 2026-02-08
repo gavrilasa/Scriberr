@@ -68,7 +68,7 @@ func DefaultTranscriptionProfile() *models.TranscriptionProfile {
 
 			// Language: ISO code for language (nil = auto-detect)
 			// Examples: "en", "es", "fr", "de", "ja", "zh"
-			Language: ptrString("en"),
+			Language: ptrString("id"),
 
 			// Task: Transcription task
 			// Options: "transcribe", "translate" (translate to English)
