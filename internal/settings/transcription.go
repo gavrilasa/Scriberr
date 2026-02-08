@@ -63,20 +63,13 @@ func DefaultTranscriptionProfile() *models.TranscriptionProfile {
 			MaxSpeakers: nil,
 
 			// ═══════════════════════════════════════════════════════════════
-			// LANGUAGE SETTINGS
+			// ═══════════════════════════════════════════════════════════════
+			// ALIGNMENT SETTINGS
 			// ═══════════════════════════════════════════════════════════════
 
-			// Language: ISO code for language (nil = auto-detect)
-			// Examples: "en", "es", "fr", "de", "ja", "zh"
-			Language: ptrString("id"),
-
-			// Task: Transcription task
-			// Options: "transcribe", "translate" (translate to English)
-			Task: "transcribe",
-
-			// ═══════════════════════════════════════════════════════════════
-			// OUTPUT SETTINGS
-			// ═══════════════════════════════════════════════════════════════
+			// AlignModel: Custom alignment model (e.g. for Indonesian)
+			// Required for languages like 'id' that don't have built-in WhisperX alignment
+			AlignModel: ptrString("indonesian-nlp/wav2vec2-large-xlsr-indonesian"),
 
 			OutputFormat:       "all",
 			Verbose:            true,
